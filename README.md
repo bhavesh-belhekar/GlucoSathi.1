@@ -159,7 +159,7 @@ glucosaathi/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/shravanivarale/GlucoSathi.git
+git clone https://github.com/bhavesh-belhekar/GlucoSathi.git
 cd GlucoSathi
 ```
 
