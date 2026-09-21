@@ -190,9 +190,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (result != null && mounted) {
-      CgmConnectionState.instance.connections
-        ..clear()
-        ..addAll(result);
+      // Only update the specific provider entries from the result, rather
+      // than clearing the entire map.  The CGM status screen updates the
+      // singleton's connections directly (e.g. lastSyncedAt after each
+      // reading).  Clearing would lose those updates.
+      for (final entry in result.entries) {
+        if (entry.value.isConnected) {
+          print('[PROFILE] _connectCgm: updating provider=${entry.key.name}, '
+              'lastSyncedAt=${entry.value.lastSyncedAt}');
+          CgmConnectionState.instance.connections[entry.key] = entry.value;
+        }
+      }
       setState(() {});
     }
   }
@@ -689,9 +697,12 @@ class _ConnectedCgmSummary extends StatelessWidget {
   final VoidCallback onDisconnect;
 
   String _lastSyncedText() {
-    if (connection.lastSyncedAt == null) return 'Never';
+    if (connection.lastSyncedAt == null) {
+      print('[PROFILE] _lastSyncedText: lastSyncedAt is NULL → "Never"');
+      return 'Never';
+    }
     final diff = DateTime.now().difference(connection.lastSyncedAt!);
-    print('[PROFILE] Timestamp received: ${connection.lastSyncedAt}');
+    print('[PROFILE] _lastSyncedText: lastSyncedAt=${connection.lastSyncedAt}');
     print('[PROFILE]   diff = ${diff.inSeconds}s → ${diff.inMinutes}m');
     if (diff.inSeconds < 60) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';

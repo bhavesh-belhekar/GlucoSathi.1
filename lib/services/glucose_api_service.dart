@@ -34,7 +34,7 @@ class GlucoseApiService {
     if (_baseUrlOverride.isNotEmpty) {
       return _baseUrlOverride;
     }
-    return 'https://glucosaathi-backend.onrender.com';
+    return 'https://glucosathi-backend.onrender.com';
   }
 
   Future<GlucosePrediction> predictRaw(

@@ -41,26 +41,31 @@ class CgmConnectionState {
     try {
       final apiService = CgmApiService();
       final status = await apiService.getCGMStatus();
+      print('[CGM] _fetchFromBackend: provider=${status.providerName}, '
+          'isConnected=${status.isConnected}, '
+          'lastSyncAt=${status.lastSyncAt}');
       if (status.isConnected) {
         final provider = CgmProvider.values.firstWhere(
           (p) => p.name.toLowerCase() == status.providerName.toLowerCase(),
           orElse: () => CgmProvider.dexcom,
         );
+        final backendLastSync = status.lastSyncAt != null
+            ? DateTime.tryParse(status.lastSyncAt!)
+            : null;
         connections[provider] = CgmConnection(
           status: CgmConnectionStatus.connected,
           provider: provider,
           connectedAt: status.connectedAt != null
               ? DateTime.tryParse(status.connectedAt!)
               : null,
-          lastSyncedAt: status.lastSyncAt != null
-              ? DateTime.tryParse(status.lastSyncAt!)
-              : null,
+          lastSyncedAt: backendLastSync,
         );
         print('[CGM] CgmConnectionState refreshed: '
               'provider=${provider.name}, '
-              'lastSyncedAt=${status.lastSyncAt}');
+              'lastSyncedAt=$backendLastSync');
       }
-    } catch (_) {
+    } catch (e) {
+      print('[CGM] _fetchFromBackend FAILED: $e');
       // Backend not available — keep current state.
     }
   }

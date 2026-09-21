@@ -64,6 +64,19 @@ class _CgmStatusScreenState extends State<CgmStatusScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // When the CGM screen regains focus (e.g. user navigated back from
+    // Home after logging insulin), refresh IOB so the displayed value
+    // reflects any newly logged doses.
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent) {
+      print('[CGM-REFRESH] didChangeDependencies: route is current — refreshing IOB');
+      _fetchIOB();
+    }
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
@@ -219,16 +232,22 @@ class _CgmStatusScreenState extends State<CgmStatusScreen>
       print('[CGM-REFRESH]   60-min: ${prediction.prediction60Min} mg/dL');
       print('[CGM-REFRESH]   Readings used: ${prediction.readingsUsed}');
       print('[CGM-REFRESH]   Total IOB (from prediction): ${prediction.totalIob} U');
+
+      // ALWAYS fetch IOB from the dedicated /iob endpoint (single source of
+      // truth).  The prediction pipeline's IOB is computed via row-index
+      // matching and can skip doses logged after the latest CGM reading.
+      // The /iob endpoint reads directly from the insulin_logs table and
+      // computes pharmacokinetic decay — it is always up-to-date.
+      await _fetchIOB();
+
+      if (!mounted) return;
       setState(() {
         _prediction = prediction;
         _hasPrediction = true;
       });
 
-      // Fetch IOB from the dedicated endpoint (single source of truth).
-      await _fetchIOB();
-
       if (mounted) setState(() => _isPredicting = false);
-      print('[CGM-REFRESH]   UI updated with fresh prediction');
+      print('[CGM-REFRESH]   UI updated with fresh prediction + IOB');
     } catch (e) {
       print('[CGM-REFRESH] ❌ Prediction error: $e');
       if (mounted) setState(() => _isPredicting = false);
@@ -245,6 +264,19 @@ class _CgmStatusScreenState extends State<CgmStatusScreen>
       });
       print('[CGM-REFRESH]   IOB from backend: ${iob.totalIob} U '
           '(rapid=${iob.iobRapid}, regular=${iob.iobRegular}, nph=${iob.iobNph})');
+
+      // Also update the CgmConnectionState singleton so the Profile screen
+      // reflects the latest sync time without requiring a full re-fetch.
+      final provider = CgmConnectionState.instance.connectedProvider;
+      if (provider != null) {
+        final old = CgmConnectionState.instance.connections[provider];
+        if (old != null) {
+          CgmConnectionState.instance.connections[provider] = old.copyWith(
+            lastSyncedAt: DateTime.now(),
+          );
+          print('[CGM-REFRESH]   CgmConnectionState.lastSyncedAt updated: ${DateTime.now()}');
+        }
+      }
     } catch (_) {
       // Non-critical: keep previous IOB if backend unreachable.
     }

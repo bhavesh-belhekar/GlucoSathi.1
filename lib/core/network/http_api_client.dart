@@ -44,7 +44,7 @@ class HttpApiClient implements ApiClient {
     if (override.isNotEmpty) {
       return Uri.parse(override);
     }
-    return Uri.parse('https://glucosaathi-backend.onrender.com');
+    return Uri.parse('https://glucosathi-backend.onrender.com');
   }
 
   final http.Client _httpClient;

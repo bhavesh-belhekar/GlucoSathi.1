@@ -222,7 +222,7 @@ flutter test
 
 ## 🔌 API reference
 
-Base URL (dev): `http://localhost:8000` · Base URL (prod): `https://glucosaathi-backend.onrender.com`
+Base URL (dev): `http://localhost:8000` · Base URL (prod): `https://glucosathi-backend.onrender.com`
 All endpoints are versioned under `/api/v1` except the health check.
 
 | Method | Path | Purpose | Auth |

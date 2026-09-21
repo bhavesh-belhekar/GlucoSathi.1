@@ -52,12 +52,21 @@ class _DexcomConnectionScreenState extends State<DexcomConnectionScreen> {
       print('[CGM-DEBUG] ── FLUTTER: status.isConnected = ${status.isConnected}');
       if (status.isConnected) {
         print('[CGM-DEBUG] ── FLUTTER: Connection successful ✓ ──');
-        // Backend confirms mock provider is available
+        print('[CGM-DEBUG] ── FLUTTER:   backend lastSyncAt = ${status.lastSyncAt}');
+        // Backend confirms mock provider is available.
+        // Use the actual backend lastSyncAt (not DateTime.now()) so the
+        // Profile screen shows the real last-synced time from the database.
+        final backendLastSync = status.lastSyncAt != null
+            ? DateTime.tryParse(status.lastSyncAt!)
+            : DateTime.now();
+        final backendConnectedAt = status.connectedAt != null
+            ? DateTime.tryParse(status.connectedAt!)
+            : DateTime.now();
         final result = CgmConnection(
           status: CgmConnectionStatus.connected,
           provider: CgmProvider.dexcom,
-          connectedAt: DateTime.now(),
-          lastSyncedAt: DateTime.now(),
+          connectedAt: backendConnectedAt ?? DateTime.now(),
+          lastSyncedAt: backendLastSync ?? DateTime.now(),
         );
         Navigator.pop(context, result);
       } else {

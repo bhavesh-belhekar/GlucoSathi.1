@@ -78,7 +78,7 @@ class InsulinApiService {
     if (_baseUrlOverride.isNotEmpty) {
       return _baseUrlOverride;
     }
-    return 'https://glucosaathi-backend.onrender.com';
+    return 'https://glucosathi-backend.onrender.com';
   }
 
   /// Fetch recent insulin logs (newest first).
