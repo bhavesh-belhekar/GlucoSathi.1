@@ -188,7 +188,7 @@ python -m app.seed.seed
 Start the API server:
 
 ```bash
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 - API: `http://localhost:8000`
